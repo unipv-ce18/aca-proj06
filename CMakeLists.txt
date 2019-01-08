@@ -7,5 +7,5 @@ include(CMakeLists.local.txt OPTIONAL)
 
 find_package(OpenCV REQUIRED)
 
-add_executable(acaproject main.cpp)
+add_executable(acaproject main.cpp sobel.h common.h)
 target_link_libraries(acaproject ${OpenCV_LIBS})
