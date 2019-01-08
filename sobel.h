@@ -214,15 +214,14 @@ int gradient_norm(struct matrix *pInMatrix_X, struct matrix *pInMatrix_Y, struct
 
 
     for (uint32_t px = 0; px < pOutImage->width * pOutImage->height; px++) {
-        unNormalizedGradient.data[px] = norm2(pInMatrix_X->data[px], pInMatrix_Y->data[px]);
+        uint16_t val = norm2(pInMatrix_X->data[px], pInMatrix_Y->data[px]);
+        unNormalizedGradient.data[px] = val;
+
       //  pOutImage->data[px] = norm2(pInMatrix_X->data[px], pInMatrix_Y->data[px]);
 
     }
 
-
-
     normalize_matrix_to_image(&unNormalizedGradient,pOutImage);
-
 
 }
 
