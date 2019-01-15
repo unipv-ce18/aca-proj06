@@ -1,48 +1,55 @@
-#include "sobel.h"
-#include "common.h"
+#include "sobel_seq.h"
+#include "omp_sobel.h"
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
 #include <iostream>
 
-using namespace std;
-using namespace cv;
 
 int main(int argc, char *argv[]) {
 
+    double start, end;
+
     //Mat img = imread("bovino.jpg", IMREAD_COLOR);
-    Mat img = imread("./img/lena.png" , IMREAD_GRAYSCALE);
-
-    image *pInImage , InImage = IMAGE_INITIALIZER;
-    image *pOutImage, OutImage = IMAGE_INITIALIZER;
-
-    // populate InputImage structure with width, height and data
-    pInImage = &InImage;
-    pOutImage = &OutImage;
-
-    pInImage->width = img.cols;
-    pInImage->height = img.rows;
-    pInImage->data = img.data;
-
-
-    sobel(pInImage,pOutImage);
-
+    cv::Mat img = imread("./img/lena.png" , cv::IMREAD_GRAYSCALE);
 
     if(img.data == nullptr)
-        cerr <<"Error loading the image\n";
+        std::cerr <<"Error loading the image\n";
 
-    namedWindow("Input image", WINDOW_NORMAL);
-    resizeWindow("Input image",1200,1200);
+    cv::Mat out = img.clone();
+
+    start = omp_get_wtime();
+
+    out = Sobel(img,0,0,img.cols,img.rows);
+
+    end = omp_get_wtime();
+
+
+    double duration_msec = double(end-start) * 1000;
+
+    std::cout << "Execution time (ms): " << duration_msec << std::endl;
+
+
+    double omp_start = omp_get_wtime();
+
+    cv::Mat outParallel = ompSobel(img,HORIZONTAL,4,4);
+
+    double omp_end = omp_get_wtime();
+
+    duration_msec = double(omp_end-omp_start) * 1000;
+
+    std::cout << "Parallel Execution time (ms): " << duration_msec << std::endl;
+
+    cv::namedWindow("Input image", CV_WINDOW_NORMAL);
+  //  cv::resizeWindow("Input image",1200,1200);
     imshow("Input image", img);
-    waitKey(0);
 
-    Mat out = Mat(pOutImage->height, pOutImage->width, CV_8UC1, pOutImage->data);
 
-    namedWindow("Output image", WINDOW_NORMAL);
-    resizeWindow("Output image",1200,1200);
-    imshow("Output image", out);
-    waitKey(0);
+    cv::namedWindow("Output blocks image", CV_WINDOW_NORMAL);
+   // cv::resizeWindow("Output image",1200,1200);
+    imshow("Output blocks image", outParallel);
+    cv::waitKey(0);
 
     return 0;
 }
