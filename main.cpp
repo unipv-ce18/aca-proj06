@@ -6,6 +6,8 @@
 
 #include <iostream>
 
+#define NUM_THREADS 4
+#define NUM_CHUNKS 4
 
 int main(int argc, char *argv[]) {
 
@@ -33,7 +35,7 @@ int main(int argc, char *argv[]) {
 
     double omp_start = omp_get_wtime();
 
-    cv::Mat outParallel = ompSobel(img,HORIZONTAL,4,4);
+    cv::Mat outParallel = ompSobel(img,HORIZONTAL,NUM_CHUNKS,NUM_THREADS);
 
     double omp_end = omp_get_wtime();
 
@@ -42,14 +44,16 @@ int main(int argc, char *argv[]) {
     std::cout << "Parallel Execution time (ms): " << duration_msec << std::endl;
 
     cv::namedWindow("Input image", CV_WINDOW_NORMAL);
-  //  cv::resizeWindow("Input image",1200,1200);
+    //  cv::resizeWindow("Input image",1200,1200);
     imshow("Input image", img);
+    cv::waitKey(0);
 
 
     cv::namedWindow("Output blocks image", CV_WINDOW_NORMAL);
-   // cv::resizeWindow("Output image",1200,1200);
+    // cv::resizeWindow("Output image",1200,1200);
     imshow("Output blocks image", outParallel);
     cv::waitKey(0);
+
 
     return 0;
 }

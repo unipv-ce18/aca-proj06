@@ -39,6 +39,10 @@ cv::Mat ompSobel(cv::Mat inputImage, CHUNK_TYPE chunkType, int nChunks, int nThr
 
         case HORIZONTAL:
         {
+
+            int altezza = inputImage.rows / nChunks;
+
+
             for (int i = 0; i < nChunks; i++) {
                 blocks[i].altezza = inputImage.rows / nChunks;
                 blocks[i].larghezza = inputImage.cols;
@@ -54,7 +58,7 @@ cv::Mat ompSobel(cv::Mat inputImage, CHUNK_TYPE chunkType, int nChunks, int nThr
 
             #pragma omp parallel for schedule(static) shared(inputImage,blocks) num_threads(nThreads)
             for (int i = 0; i < nChunks; i++) {
-                cv::Mat s = Sobel(inputImage,0,i*blocks[i].altezza,blocks[i].larghezza,i*blocks[i].altezza + blocks[i].altezza);
+                cv::Mat s = Sobel(inputImage,0,i*altezza,blocks[i].larghezza,i*altezza + blocks[i].altezza);
                 blocksMat[i] = s;
             }
 
