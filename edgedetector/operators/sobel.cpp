@@ -5,7 +5,7 @@
 #ifndef ACAPROJECT_SOBEL_SEQ_H
 #define ACAPROJECT_SOBEL_SEQ_H
 
-#include "edge_detector.h"
+#include "../edge_detector.h"
 #define KERNEL_DIM 3
 
 

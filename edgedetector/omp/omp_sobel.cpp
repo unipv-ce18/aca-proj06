@@ -5,7 +5,7 @@
 #ifndef ACAPROJECT_OMP_SOBEL_H
 #define ACAPROJECT_OMP_SOBEL_H
 
-#include "edge_detector.h"
+#include "../edge_detector.h"
 #include <omp.h>
 
 

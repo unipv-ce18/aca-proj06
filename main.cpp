@@ -1,5 +1,6 @@
 
-#include "edge_detector.h"
+#include "edgedetector/edge_detector.h"
+
 #include <omp.h>
 #include <iostream>
 
