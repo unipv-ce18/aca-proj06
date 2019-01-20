@@ -5,11 +5,7 @@
 #ifndef ACAPROJECT_SOBEL_SEQ_H
 #define ACAPROJECT_SOBEL_SEQ_H
 
-
-#include <opencv2/core/core.hpp>
-#include <opencv2/highgui/highgui.hpp>
-#include <iostream>
-#include <omp.h>
+#include "edge_detector.h"
 #define KERNEL_DIM 3
 
 
@@ -30,12 +26,7 @@ typedef struct grad {
     int gradY;
 };
 
-typedef struct blocco {
-    int startRow;
-    int endRow;
-    int altezza;
-    int larghezza;
-};
+
 
 grad gradient(cv::Mat I, int x, int y) {
 
@@ -76,7 +67,7 @@ int norm2(int x, int y) {
     return sqrt(x*x + y*y);
 }
 
-cv::Mat Sobel(cv::Mat inputImage) {
+cv::Mat edgeDetector::Sobel(cv::Mat inputImage) {
 
     cv::Mat outImage(cv::Size(inputImage.cols, inputImage.rows), CV_8UC1, cv::Scalar(0));
     //std::cout << "Width: " << outImage.cols << "height: " << outImage.rows << std::endl;
@@ -105,7 +96,7 @@ cv::Mat Sobel(cv::Mat inputImage) {
     return outImage;
 }
 
-cv::Mat Sobel(cv::Mat inputImage, int x_Left, int y_Top, int x_Right, int y_Bottom) {
+cv::Mat edgeDetector::Sobel(cv::Mat inputImage, int x_Left, int y_Top, int x_Right, int y_Bottom) {
 
     cv::Mat outImage(cv::Size((x_Right - x_Left),(y_Bottom - y_Top)), CV_8UC1, cv::Scalar(0));
     //std::cout << "Width: " << outImage.cols << "height: " << outImage.rows << std::endl;
@@ -119,7 +110,7 @@ cv::Mat Sobel(cv::Mat inputImage, int x_Left, int y_Top, int x_Right, int y_Bott
 
 
     for(int i=y_Top; i < y_Bottom; i++) {
-        for(int j=x_Left; j < x_Right-1; j++) {
+        for(int j=x_Left; j < x_Right; j++) {
             try {
                 grad _gradient = gradient(inputImage,i,j);
                 int gradVal = norm2( _gradient.gradX, _gradient.gradY );

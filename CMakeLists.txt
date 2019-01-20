@@ -14,5 +14,5 @@ if (OPENMP_FOUND)
     set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
 endif()
 
-add_executable(acaproject main.cpp sobel.h common.h omp_sobel.h sobel_seq.h)
+add_executable(acaproject main.cpp common.h omp_sobel.cpp sobel_seq.cpp edge_detector.h Canny.cpp)
 target_link_libraries(acaproject ${OpenCV_LIBS})
