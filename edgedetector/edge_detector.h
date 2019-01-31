@@ -20,7 +20,7 @@ namespace edgeDetector {
     cv::Mat ompSobel(cv::Mat inputImage, CHUNK_TYPE chunkType, int nChunks, int nThreads);
 
     /* CANNY EDGE DETECTOR */
-    cv::Mat Canny(cv::Mat inputImage);
+    cv::Mat Canny(cv::Mat inputImage, cannyKernel kernel_t );
 
 }
 

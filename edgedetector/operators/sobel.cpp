@@ -1,10 +1,6 @@
 //
 // Created by marco on 12/01/19.
 //
-
-#ifndef ACAPROJECT_SOBEL_SEQ_H
-#define ACAPROJECT_SOBEL_SEQ_H
-
 #include "../edge_detector.h"
 #define KERNEL_DIM 3
 
@@ -129,4 +125,3 @@ cv::Mat edgeDetector::Sobel(cv::Mat inputImage, int x_Left, int y_Top, int x_Rig
     return outImage;
 }
 
-#endif //ACAPROJECT_SOBEL_SEQ_H

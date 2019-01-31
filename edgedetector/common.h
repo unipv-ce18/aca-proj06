@@ -25,4 +25,9 @@ typedef struct bloccoV {
     int altezza;
     int larghezza;
 };
+
+typedef struct cannyKernel {
+    int size;
+    double sigma;
+};
 #endif //ACAPROJECT_COMMON_H

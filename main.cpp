@@ -3,9 +3,9 @@
 
 #include <omp.h>
 #include <iostream>
-
-int NUM_THREADS = 8;
-int NUM_CHUNKS = 8;
+#include <fstream>
+int NUM_THREADS = 4;
+int NUM_CHUNKS = 220;
 char *inputImgName = "./img/lena.png";
 cv::Mat img;
 
@@ -78,9 +78,38 @@ int main(int argc, char *argv[]) {
 
     std::cout << "SpeedUp [V]: " << (duration_msec / parallel_duration_v_msec) << std::endl;
 
+/*
+    for (int nThread = 1; nThread <= 8; nThread++) {
+        std::ofstream myfile;
+        std::string name = "results/" + std::to_string(nThread) + ".txt";
+        myfile.open (name);
+        for (int nChunks = 2; nChunks <= 1024; nChunks *= 2) {
+
+            double omp_start = omp_get_wtime();
+            cv::Mat outParallel = edgeDetector::ompSobel(img,HORIZONTAL,nChunks,nThread);
+            double omp_end = omp_get_wtime();
+            double duration = (omp_end - omp_start) * 1000;
+
+            myfile << nChunks << "\t" << duration << "\n";
+
+        }
+        myfile.close();
+    }
+*/
+
+
+    cannyKernel kernel_t;
+    kernel_t.size = 5;
+    kernel_t.sigma = 1;
+
+    cv::Mat blurred = edgeDetector::Canny(img,kernel_t);
+
+
+    /*
     cv::namedWindow("Input image", CV_WINDOW_NORMAL);
-    imshow("Input image", img);
+    imshow("Input image", blurred);
     cv::waitKey(0);
+
 
 
     cv::namedWindow("Output blocks image [H]", CV_WINDOW_NORMAL);
@@ -90,7 +119,7 @@ int main(int argc, char *argv[]) {
     cv::namedWindow("Output blocks image [V]", CV_WINDOW_NORMAL);
     imshow("Output blocks image [V]", outParallelV);
     cv::waitKey(0);
-
+    */
     return 0;
 }
 

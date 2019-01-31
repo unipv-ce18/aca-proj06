@@ -2,9 +2,6 @@
 // Created by marco on 10/01/19.
 //
 
-#ifndef ACAPROJECT_OMP_SOBEL_H
-#define ACAPROJECT_OMP_SOBEL_H
-
 #include "../edge_detector.h"
 #include <omp.h>
 
@@ -39,7 +36,7 @@ cv::Mat edgeDetector::ompSobel(cv::Mat inputImage, CHUNK_TYPE chunkType, int nCh
                 }
             }
 
-            #pragma omp parallel for schedule(static) shared(inputImage,blocks) num_threads(nThreads)
+            #pragma omp parallel for schedule(dynamic,1) shared(inputImage,blocks) num_threads(nThreads)
             for (int i = 0; i < nChunks; i++) {
                 cv::Mat s = Sobel(inputImage,blocks[i].larghezza * i ,0,(blocks[i].larghezza * i) + blocks[i].larghezza,blocks[i].altezza);
                 blocksMat[i] = s;
@@ -70,9 +67,9 @@ cv::Mat edgeDetector::ompSobel(cv::Mat inputImage, CHUNK_TYPE chunkType, int nCh
                 }
             }
 
-            #pragma omp parallel for schedule(static) shared(inputImage,blocks,altezza) num_threads(nThreads)
+            #pragma omp parallel for schedule(dynamic,1) shared(inputImage,blocks) num_threads(nThreads)
             for (int i = 0; i < nChunks; i++) {
-                cv::Mat s = Sobel(inputImage,0,i*altezza,blocks[i].larghezza,i*altezza + blocks[i].altezza);
+                cv::Mat s = Sobel(inputImage,0,i*(inputImage.rows / nChunks),blocks[i].larghezza,i*(inputImage.rows / nChunks) + blocks[i].altezza);
                 blocksMat[i] = s;
             }
 
@@ -95,4 +92,3 @@ cv::Mat edgeDetector::ompSobel(cv::Mat inputImage, CHUNK_TYPE chunkType, int nCh
     return outImage;
 
 }
-#endif //ACAPROJECT_OMP_SOBEL_H
