@@ -1,13 +1,25 @@
 
 #include "edgedetector/edge_detector.h"
 
+#include <dirent.h>
 #include <omp.h>
 #include <iostream>
 #include <fstream>
-int NUM_THREADS = 4;
-int NUM_CHUNKS = 220;
-char *inputImgName = "./img/lena.png";
+
+
+int NUM_THREADS = 2;
+int NUM_CHUNKS = 2;
+char *inputImgName;
+char *inputImgFolder = "./test/";
 cv::Mat img;
+
+typedef struct times {
+    double parallel;
+    double parallelH;
+    double parallelV;
+};
+
+times doSobel(const char* inputImgName);
 
 int main(int argc, char *argv[]) {
 
@@ -28,13 +40,88 @@ int main(int argc, char *argv[]) {
     }
 
 
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir (inputImgFolder)) != NULL) {
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+           if (ent->d_type == 8) { // 8 stands for image
+               std::string buf(inputImgFolder);
+               buf.append(ent->d_name);
+            times tmpTimes;
+            tmpTimes = doSobel(buf.c_str());
+            std::cout << tmpTimes.parallel << " - " << tmpTimes.parallelH << " - " << tmpTimes.parallelV << std::endl;
+           }
 
+        }
+        closedir (dir);
+    } else {
+        /* could not open directory */
+        perror ("");
+        return EXIT_FAILURE;
+    }
+
+
+/*
+    for (int nThread = 1; nThread <= 8; nThread++) {
+        std::ofstream myfile;
+        std::string name = "results/" + std::to_string(nThread) + ".txt";
+        myfile.open (name);
+        for (int nChunks = 2; nChunks <= 1024; nChunks *= 2) {
+
+            double omp_start = omp_get_wtime();
+            cv::Mat outParallel = edgeDetector::ompSobel(img,VERTICAL,nChunks,nThread);
+            double omp_end = omp_get_wtime();
+            double duration = (omp_end - omp_start) * 1000;
+
+            myfile << nChunks << "\t" << duration << "\n";
+
+        }
+        myfile.close();
+    }
+
+
+
+    cannyKernel kernel_t;
+    kernel_t.size = 5;
+    kernel_t.sigma = 1;
+
+    cv::Mat blurred = edgeDetector::Canny(img,kernel_t);
+
+*/
+/*
+    cv::namedWindow("Input image", CV_WINDOW_NORMAL);
+    imshow("Input image", img);
+    cv::waitKey(0);
+
+
+
+    cv::namedWindow("Output image", CV_WINDOW_NORMAL);
+    imshow("Output image", out);
+    cv::waitKey(0);
+
+    cv::namedWindow("Output blocks image [V]", CV_WINDOW_NORMAL);
+    imshow("Output blocks image [V]", outParallelV);
+    cv::waitKey(0);
+    */
+    return 0;
+}
+
+times doSobel(const char* InputImgName) {
+
+    times tmpTimes;
     double start, end;
 
     //Mat img = imread("bovino.jpg", IMREAD_COLOR);
+try {
 
-    img = imread(inputImgName , cv::IMREAD_GRAYSCALE);
+    img = imread(InputImgName , cv::IMREAD_GRAYSCALE);
 
+}catch( cv::Exception& e )
+{
+    const char* err_msg = e.what();
+    std::cout << "exception caught: " << err_msg << std::endl;
+}
     if(img.data == nullptr)
         std::cerr <<"Error loading the image\n";
 
@@ -49,8 +136,9 @@ int main(int argc, char *argv[]) {
 
     double duration_msec = double(end-start) * 1000;
 
-    std::cout << "Execution time (ms): " << duration_msec << std::endl;
+   // std::cout << "Execution time (ms): " << duration_msec << std::endl;
 
+    tmpTimes.parallel = duration_msec;
 
     double omp_start = omp_get_wtime();
 
@@ -60,9 +148,10 @@ int main(int argc, char *argv[]) {
 
     double parallel_duration_h_msec = double(omp_end-omp_start) * 1000;
 
-    std::cout << "Parallel Execution time [HORIZONTAL] (ms): " << parallel_duration_h_msec << std::endl;
+    tmpTimes.parallelH = parallel_duration_h_msec;
+    // std::cout << "Parallel Execution time [HORIZONTAL] (ms): " << parallel_duration_h_msec << std::endl;
 
-    std::cout << "SpeedUp [H]: " << (duration_msec / parallel_duration_h_msec) << std::endl;
+  //  std::cout << "SpeedUp [H]: " << (duration_msec / parallel_duration_h_msec) << std::endl;
 
 
 
@@ -74,52 +163,10 @@ int main(int argc, char *argv[]) {
 
     double parallel_duration_v_msec = double(omp_end_vertical-omp_start_vertical) * 1000;
 
-    std::cout << "Parallel Execution time [VERTICAL] (ms): " << parallel_duration_v_msec << std::endl;
+    tmpTimes.parallelV = parallel_duration_v_msec;
+  //  std::cout << "Parallel Execution time [VERTICAL] (ms): " << parallel_duration_v_msec << std::endl;
 
-    std::cout << "SpeedUp [V]: " << (duration_msec / parallel_duration_v_msec) << std::endl;
+    //std::cout << "SpeedUp [V]: " << (duration_msec / parallel_duration_v_msec) << std::endl;
 
-/*
-    for (int nThread = 1; nThread <= 8; nThread++) {
-        std::ofstream myfile;
-        std::string name = "results/" + std::to_string(nThread) + ".txt";
-        myfile.open (name);
-        for (int nChunks = 2; nChunks <= 1024; nChunks *= 2) {
-
-            double omp_start = omp_get_wtime();
-            cv::Mat outParallel = edgeDetector::ompSobel(img,HORIZONTAL,nChunks,nThread);
-            double omp_end = omp_get_wtime();
-            double duration = (omp_end - omp_start) * 1000;
-
-            myfile << nChunks << "\t" << duration << "\n";
-
-        }
-        myfile.close();
-    }
-*/
-
-
-    cannyKernel kernel_t;
-    kernel_t.size = 5;
-    kernel_t.sigma = 1;
-
-    cv::Mat blurred = edgeDetector::Canny(img,kernel_t);
-
-
-    /*
-    cv::namedWindow("Input image", CV_WINDOW_NORMAL);
-    imshow("Input image", blurred);
-    cv::waitKey(0);
-
-
-
-    cv::namedWindow("Output blocks image [H]", CV_WINDOW_NORMAL);
-    imshow("Output blocks image [H]", outParallelH);
-    cv::waitKey(0);
-
-    cv::namedWindow("Output blocks image [V]", CV_WINDOW_NORMAL);
-    imshow("Output blocks image [V]", outParallelV);
-    cv::waitKey(0);
-    */
-    return 0;
+    return tmpTimes;
 }
-
