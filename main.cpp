@@ -6,12 +6,23 @@
 #include <iostream>
 #include <fstream>
 
+#ifdef __unix__
+#define OS_Windows 0
+
+#elif defined(_WIN32) || defined(WIN32)     /* _Win32 is usually defined by compilers targeting 32 or   64 bit Windows systems */
+
+#define OS_Windows 1
+    #include <windows.h>
+
+#endif
+
+
 #define MAX_FILES 5000
 
 int NUM_THREADS = 2;
 int NUM_CHUNKS = 2;
 char *inputImgName;
-char *inputImgFolder = "./test/";
+char *inputImgFolder = "test/";
 cv::Mat img;
 
 typedef struct times {
@@ -21,7 +32,12 @@ typedef struct times {
 };
 
 times doSobel(const char* inputImgName, bool logging = false);
-std::vector<times> readFolder();
+#ifdef __unix__
+    std::vector<times> readFolder();
+#elif defined(_WIN32) || defined(WIN32)
+    std::vector<times> readFolderWin();
+#endif
+
 void averageTimes(std::vector<times> totalTimes);
 
 int main(int argc, char *argv[]) {
@@ -42,8 +58,14 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    std::vector<times> computedTimes;
+    if(OS_Windows) {
 
-    std::vector<times> computedTimes = readFolder();
+    }
+    else if(!OS_Windows) {
+        computedTimes = readFolder();
+    }
+
     averageTimes(computedTimes);
 
 
@@ -126,6 +148,29 @@ std::vector<times> readFolder() {
     }
     return totalTimes;
 }
+#ifdef defined(_WIN32) || defined(WIN32)
+std::vector<times> readFolderWin()
+{
+    std::vector<times> totalTimes(MAX_FILES);
+    std::string pattern(inputImgFolder);
+    pattern.append("\\*");
+    WIN32_FIND_DATA data;
+    HANDLE hFind;
+    int i = 0;
+    if ((hFind = FindFirstFile(pattern.c_str(), &data)) != INVALID_HANDLE_VALUE) {
+        do {
+            v.push_back(data.cFileName);
+             times tmpTimes;
+                tmpTimes = doSobel(data.cFileName,false);
+
+                totalTimes[i] = tmpTimes;
+                i++;
+        } while (FindNextFile(hFind, &data) != 0);
+        std::cout << "File analizzati " << i << std::endl;
+        FindClose(hFind);
+    }
+}
+#endif
 
 void averageTimes(std::vector<times> totalTimes) {
 
