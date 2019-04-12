@@ -6,6 +6,7 @@
 #include <iostream>
 #include <fstream>
 
+#define MAX_FILES 5000
 
 int NUM_THREADS = 2;
 int NUM_CHUNKS = 2;
@@ -20,7 +21,8 @@ typedef struct times {
 };
 
 times doSobel(const char* inputImgName, bool logging = false);
-int readFolder();
+std::vector<times> readFolder();
+void averageTimes(std::vector<times> totalTimes);
 
 int main(int argc, char *argv[]) {
 
@@ -40,7 +42,10 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    readFolder();
+
+    std::vector<times> computedTimes = readFolder();
+    averageTimes(computedTimes);
+
 
 
 
@@ -89,7 +94,11 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-int readFolder() {
+std::vector<times> readFolder() {
+
+    std::vector<times> totalTimes(MAX_FILES);
+
+
     DIR *dir;
     struct dirent *ent;
     if ((dir = opendir (inputImgFolder)) != NULL) {
@@ -101,7 +110,10 @@ int readFolder() {
                 buf.append(ent->d_name);
                 times tmpTimes;
                 tmpTimes = doSobel(buf.c_str(),false);
-                std::cout << tmpTimes.parallel << " - " << tmpTimes.parallelH << " - " << tmpTimes.parallelV << std::endl;
+
+                totalTimes[i] = tmpTimes;
+
+              //  std::cout << tmpTimes.parallel << " - " << tmpTimes.parallelH << " - " << tmpTimes.parallelV << std::endl;
                 i++;
             }
 
@@ -111,8 +123,37 @@ int readFolder() {
     } else {
         /* could not open directory */
         perror ("");
-        return EXIT_FAILURE;
     }
+    return totalTimes;
+}
+
+void averageTimes(std::vector<times> totalTimes) {
+
+    double sumParallel = 0;
+    double sumParallelH = 0;
+    double sumParallelV = 0;
+
+    int counter = 0;
+    for(std::vector<times>::iterator it = totalTimes.begin(); it != totalTimes.end(); ++it) {
+
+        if (it.base()->parallel == 0 && it.base()->parallelV == 0 && it.base()->parallelH == 0) {
+            continue;
+        }
+
+        sumParallel += it.base()->parallel;
+        sumParallelH += it.base()->parallelH;
+        sumParallelV += it.base()->parallelV;
+        counter++;
+        /* std::cout << *it; ... */
+    }
+
+    double avgParallel = sumParallel / counter;
+    double avgParallelH = sumParallelH / counter;
+    double avgParallelV = sumParallelV / counter;
+
+    std::cout << "Number of images: " << counter << std::endl;
+    std::cout << "Average parallel time: " << avgParallel << "\nAverage parallel time [H]: " << avgParallelH << "\nAverage parallel time [V]:" << avgParallelV << std::endl;
+
 }
 
 times doSobel(const char* InputImgName, bool logging) {
@@ -132,7 +173,7 @@ times doSobel(const char* InputImgName, bool logging) {
     }
 
     if(img.data == nullptr)
-        std::cerr <<"Error loading the image\n";
+        std::cerr <<"Error loading the image --> " << InputImgName << "\n";
 
     cv::Mat out = img.clone();
 
