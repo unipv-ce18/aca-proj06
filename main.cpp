@@ -19,7 +19,8 @@ typedef struct times {
     double parallelV;
 };
 
-times doSobel(const char* inputImgName);
+times doSobel(const char* inputImgName, bool logging = false);
+int readFolder();
 
 int main(int argc, char *argv[]) {
 
@@ -39,27 +40,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    readFolder();
 
-    DIR *dir;
-    struct dirent *ent;
-    if ((dir = opendir (inputImgFolder)) != NULL) {
-        /* print all the files and directories within directory */
-        while ((ent = readdir (dir)) != NULL) {
-           if (ent->d_type == 8) { // 8 stands for image
-               std::string buf(inputImgFolder);
-               buf.append(ent->d_name);
-            times tmpTimes;
-            tmpTimes = doSobel(buf.c_str());
-            std::cout << tmpTimes.parallel << " - " << tmpTimes.parallelH << " - " << tmpTimes.parallelV << std::endl;
-           }
-
-        }
-        closedir (dir);
-    } else {
-        /* could not open directory */
-        perror ("");
-        return EXIT_FAILURE;
-    }
 
 
 /*
@@ -107,21 +89,48 @@ int main(int argc, char *argv[]) {
     return 0;
 }
 
-times doSobel(const char* InputImgName) {
+int readFolder() {
+    DIR *dir;
+    struct dirent *ent;
+    if ((dir = opendir (inputImgFolder)) != NULL) {
+        int i = 0;
+        /* print all the files and directories within directory */
+        while ((ent = readdir (dir)) != NULL) {
+            if (ent->d_type == 8) { // 8 stands for image
+                std::string buf(inputImgFolder);
+                buf.append(ent->d_name);
+                times tmpTimes;
+                tmpTimes = doSobel(buf.c_str(),false);
+                std::cout << tmpTimes.parallel << " - " << tmpTimes.parallelH << " - " << tmpTimes.parallelV << std::endl;
+                i++;
+            }
+
+        }
+        closedir (dir);
+        std::cout << "File analizzati " << i << std::endl;
+    } else {
+        /* could not open directory */
+        perror ("");
+        return EXIT_FAILURE;
+    }
+}
+
+times doSobel(const char* InputImgName, bool logging) {
 
     times tmpTimes;
     double start, end;
 
-    //Mat img = imread("bovino.jpg", IMREAD_COLOR);
-try {
+    try {
 
-    img = imread(InputImgName , cv::IMREAD_GRAYSCALE);
+        img = imread(InputImgName , cv::IMREAD_GRAYSCALE);
 
-}catch( cv::Exception& e )
-{
-    const char* err_msg = e.what();
-    std::cout << "exception caught: " << err_msg << std::endl;
-}
+    } catch( cv::Exception& e ) {
+
+        const char* err_msg = e.what();
+        std::cout << "exception caught: " << err_msg << std::endl;
+
+    }
+
     if(img.data == nullptr)
         std::cerr <<"Error loading the image\n";
 
@@ -135,10 +144,8 @@ try {
 
 
     double duration_msec = double(end-start) * 1000;
-
-   // std::cout << "Execution time (ms): " << duration_msec << std::endl;
-
     tmpTimes.parallel = duration_msec;
+
 
     double omp_start = omp_get_wtime();
 
@@ -149,9 +156,7 @@ try {
     double parallel_duration_h_msec = double(omp_end-omp_start) * 1000;
 
     tmpTimes.parallelH = parallel_duration_h_msec;
-    // std::cout << "Parallel Execution time [HORIZONTAL] (ms): " << parallel_duration_h_msec << std::endl;
 
-  //  std::cout << "SpeedUp [H]: " << (duration_msec / parallel_duration_h_msec) << std::endl;
 
 
 
@@ -164,9 +169,16 @@ try {
     double parallel_duration_v_msec = double(omp_end_vertical-omp_start_vertical) * 1000;
 
     tmpTimes.parallelV = parallel_duration_v_msec;
-  //  std::cout << "Parallel Execution time [VERTICAL] (ms): " << parallel_duration_v_msec << std::endl;
 
-    //std::cout << "SpeedUp [V]: " << (duration_msec / parallel_duration_v_msec) << std::endl;
+    if (logging) {
 
-    return tmpTimes;
+        std::cout << "======== " << InputImgName << std::endl;
+        std::cout << "Execution time (ms): " << duration_msec << std::endl;
+        std::cout << "Parallel Execution time [HORIZONTAL] (ms): " << parallel_duration_h_msec << std::endl;
+        std::cout << "SpeedUp [H]: " << (duration_msec / parallel_duration_h_msec) << std::endl;
+        std::cout << "Parallel Execution time [VERTICAL] (ms): " << parallel_duration_v_msec << std::endl;
+        std::cout << "SpeedUp [V]: " << (duration_msec / parallel_duration_v_msec) << std::endl;
+        std::cout << "==============================================================" << std::endl;
+    }
+        return tmpTimes;
 }
